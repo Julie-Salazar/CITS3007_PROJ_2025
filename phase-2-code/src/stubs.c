@@ -6,6 +6,9 @@
 // You can replace these stub implementations with your own code,
 // if you wish.
 
+// allow access to FILE-based IO (e.g. fprintf) in this translation unit
+#define CITS3007_PERMISSIVE
+
 #include "logging.h"
 #include "db.h"
 
@@ -24,7 +27,7 @@
  * 
  * This function should not return.
  */
-void panic(const char *msg) {
+static void panic(const char *msg) {
   fprintf(stderr, "PANIC: %s\n", msg);
   abort();
 }
@@ -79,12 +82,12 @@ bool account_lookup_by_userid(const char *userid, account_t *acc) {
   // userid must be a valid, null-terminated string.
   // (Note that it is impossible in C for a function to check whether a string has been
   // properly null-terminated; this is always the responsibility of the caller.)
-  if (strncmp(acc->userid, "bob", USER_ID_LENGTH) == 0) {
+  if (strncmp(userid, "bob", USER_ID_LENGTH) == 0) {
     account_t bob_acc = { 0 };
 
     strcpy(bob_acc.userid, "bob");
     strcpy(bob_acc.email, "bob.smith@example.com");
-    strcpy(bob_acc.birthdate, "1990-01-01");
+    memcpy(bob_acc.birthdate, "1990-01-01", BIRTHDATE_LENGTH);
     *acc = bob_acc;
     return true;
   }
