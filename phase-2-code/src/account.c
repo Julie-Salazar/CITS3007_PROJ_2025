@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <limits.h>
+#include <unistd.h>
 #include "logging.h"
 
 // Argon2 parameters would be defined here
@@ -250,14 +251,14 @@ void account_free(account_t *acc) {
 
 
 
-bool account_update_password(account_t *acc, const char *new_plaintext_password) {
-    if (!acc || !new_plaintext_password) {
-        return false;
-    }
+//bool account_update_password(account_t *acc, const char *new_plaintext_password) {
+    //if (!acc || !new_plaintext_password) {
+    //    return false;
+    //}
 
-    hash_password(new_plaintext_password, acc->password_hash);
-    return true;
-}
+    //hash_password(new_plaintext_password, acc->password_hash);
+    //return true;
+//}
 
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {
     if (!acc) {
@@ -278,36 +279,63 @@ void account_record_login_failure(account_t *acc) {
     acc->login_fail_count++;
 }
 
+/**
+*Checks if the account is currently banned.
+*
+*An account is considered banned if the current system time is earlier than the `unban_time`.
+*
+*@param acc A pointer to the account structure to check.
+*@return true if the account is banned, false otherwise.
+*/
 bool account_is_banned(const account_t *acc) {
-    if (!acc) {
-        return true;
-    }
-
-    return acc->unban_time > time(NULL);
+  
+  if (!acc) return false;
+  time_t now = time(NULL);
+  return acc->unban_time > now;
 }
 
+/**
+*Checks if the account has expired.
+*
+*An account is considered expired if the current system time is equal to or later than the expiration_time.
+*If the expiration time is 0, the account is treated as not expired.
+*
+*@param acc A pointer to the account structure to check.
+*@return true if the account has expired, false otherwise.
+*/
 bool account_is_expired(const account_t *acc) {
-    if (!acc) {
-        return true;
-    }
-
-    return acc->expiration_time != 0 && acc->expiration_time < time(NULL);
+  
+  if (!acc) return false;
+  time_t now = time(NULL);
+  return acc->expiration_time > 0 && acc->expiration_time <= now;
 }
-
+/**
+*Sets the unban time for an account.
+*
+*This function updates the `unban_time` field of the account. If the current time is before the unban time,
+*the account will be considered banned.
+*
+*@param acc A pointer to the account structure to modify.
+*@param t The UNIX timestamp (time_t) representing when the ban ends.
+*/
 void account_set_unban_time(account_t *acc, time_t t) {
-    if (!acc) {
-        return;
-    }
-
-    acc->unban_time = t;
+  
+  if (!acc) return;
+  acc->unban_time = t;
 }
-
+/**
+*Sets the expiration time for an account.
+*
+*This function updates the `expiration_time` field. If the current time is later than or equal to this time,
+*the account is considered expired.
+*
+*@param acc A pointer to the account structure to modify.
+*@param t The UNIX timestamp (time_t) representing when the account should expire.
+*/
 void account_set_expiration_time(account_t *acc, time_t t) {
-    if (!acc) {
-        return;
-    }
 
-    acc->expiration_time = t;
+  if (!acc) return;
+  acc->expiration_time = t;
 }
 
 void account_set_email(account_t *acc, const char *new_email) {
