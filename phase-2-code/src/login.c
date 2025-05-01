@@ -112,14 +112,24 @@ static void add_security_delay(void) {
 
 login_result_t handle_login(const char *userid, const char *password,
                             ip4_addr_t client_ip, time_t login_time,
-                            int client_output_fd, int log_fd,
+                            int client_output_fd,
                             login_session_data_t *session) 
 {
+<<<<<<< HEAD
     // Parameter validation
     if (!userid || !password || !session) {
         dprintf(log_fd, "Login attempt failed: Invalid parameters\n");
         return LOGIN_FAIL_INTERNAL_ERROR;
     }
+=======
+  // remove the contents of this function and replace it with your own code.
+  (void) userid;
+  (void) password;
+  (void) client_ip;
+  (void) login_time;
+  (void) client_output_fd;
+  (void) session;
+>>>>>>> 2b2df3a4a12237db8e9f8e5469671391bb0a825b
 
     // Basic input validation
     if (strlen(userid) == 0 || strlen(password) < MIN_PASSWORD_LENGTH) {
