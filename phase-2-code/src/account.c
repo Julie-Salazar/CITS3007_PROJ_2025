@@ -340,11 +340,62 @@ void account_set_expiration_time(account_t *acc, time_t t) {
 
 void account_set_email(account_t *acc, const char *new_email) {
     if (!acc || !new_email) {
+        log_message(LOG_ERROR, "account_set_email: NULL argument");
         return;
     }
 
+    
+    // Verify email length
+    size_t email_len = strlen(new_email);
+    if (email_len == 0 || email_len >= EMAIL_LENGTH) {
+        log_message(LOG_ERROR, "account_set_email: Invalid email length");
+        return;
+    }
+
+    
+    // Verify email format
+    bool has_at = false;
+    bool has_dot = false;
+    bool has_domain = false;
+    int at_pos = -1;
+
+    for (size_t i = 0; i < email_len; i++) {
+        // Check for illegal characters
+        if (!isprint((unsigned char)new_email[i])) {
+            log_message(LOG_ERROR, "account_set_email: Email contains non-printable characters");
+            return;
+        }
+
+        if (new_email[i] == '@') {
+            if (has_at || i == 0 || i == email_len - 1) {
+                log_message(LOG_ERROR, "account_set_email: Invalid @ symbol position");
+                return;
+            }
+            has_at = true;
+            at_pos = i;
+        }
+        else if (new_email[i] == '.') {
+            if (i == 0 || i == email_len - 1 || i == (size_t)at_pos + 1) {
+                log_message(LOG_ERROR, "account_set_email: Invalid . symbol position");
+                return;
+            }
+            has_dot = true;
+            if (at_pos != -1 && i > (size_t)at_pos) {
+                has_domain = true;
+            }
+        }
+    }
+
+    if (!has_at || !has_dot || !has_domain) {
+        log_message(LOG_ERROR, "account_set_email: Invalid email format");
+        return;
+    }
+
+    // Safely copy the mailbox
     strncpy(acc->email, new_email, EMAIL_LENGTH - 1);
     acc->email[EMAIL_LENGTH - 1] = '\0';
+
+    log_message(LOG_INFO, "account_set_email: Successfully updated email for user %s", acc->userid);
 }
 
 bool account_print_summary(const account_t *acct, int fd) {
