@@ -280,7 +280,7 @@ void account_record_login_failure(account_t *acc) {
 }
 
 /**
-*Checks if the account is currently banned.
+*@brief Checks if the account is currently banned.
 *
 *An account is considered banned if the current system time is earlier than the `unban_time`.
 *
@@ -295,7 +295,7 @@ bool account_is_banned(const account_t *acc) {
 }
 
 /**
-*Checks if the account has expired.
+*@brief Checks if the account has expired.
 *
 *An account is considered expired if the current system time is equal to or later than the expiration_time.
 *If the expiration time is 0, the account is treated as not expired.
@@ -310,7 +310,7 @@ bool account_is_expired(const account_t *acc) {
   return acc->expiration_time > 0 && acc->expiration_time <= now;
 }
 /**
-*Sets the unban time for an account.
+*@brief Sets the unban time for an account.
 *
 *This function updates the `unban_time` field of the account. If the current time is before the unban time,
 *the account will be considered banned.
@@ -324,7 +324,7 @@ void account_set_unban_time(account_t *acc, time_t t) {
   acc->unban_time = t;
 }
 /**
-*Sets the expiration time for an account.
+*@brief Sets the expiration time for an account.
 *
 *This function updates the `expiration_time` field. If the current time is later than or equal to this time,
 *the account is considered expired.
