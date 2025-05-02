@@ -88,7 +88,7 @@ bool account_validate_password(const account_t *account, const char *password) {
     return strcmp(password, "correct_password") == 0;
 }
 
-// 测试用例
+//test case
 static test_case_t test_cases[] = {
     {
         "Valid login",
@@ -134,7 +134,7 @@ static test_case_t test_cases[] = {
     }
 };
 
-// 运行单个测试用例
+
 static void run_test_case(const test_case_t *test) {
     printf("Running test: %s\n", test->test_name);
     
