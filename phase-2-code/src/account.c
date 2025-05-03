@@ -6,7 +6,10 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include "logging.h"
+#include <argon2.h>
+#include <sys/random.h>
 
+#define SALT_LENGTH 16
 
 // #define BCRYPT_WORK_FACTOR 12
 
@@ -185,11 +188,46 @@ bool account_validate_password(const account_t *acc, const char *plaintext_passw
   return false;
 }
 
-bool account_update_password(account_t *acc, const char *new_plaintext_password) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) new_plaintext_password;
-  return false;
+int generate_salt(uint8_t *salt, size_t length) {
+  ssize_t result = getrandom(salt, length, 0);
+
+  if(result < 0 || (size_t)result != length) {
+    return -1;
+  }
+  return 0;
+}
+
+bool account_update_password(account_t *acc, const char *new_plaintext_password) {  
+
+  char hashed_pw[HASH_LENGTH];
+  uint8_t salt[SALT_LENGTH];
+  
+  if(generate_salt(salt, SALT_LENGTH) != 0) {
+    return false;
+  }
+
+  // Argon2id parameters 
+  uint32_t t_cost = 5;
+  uint32_t m_cost = 7168;
+  uint32_t parallelism = 1;
+
+  //TODO: check if argon2id expects NULL terminated salt
+  int result = argon2id_hash_encoded( 
+    t_cost, m_cost, parallelism,
+    new_plaintext_password, strlen(new_plaintext_password),
+    salt, SALT_LENGTH,
+    HASH_LENGTH - 1,
+    hashed_pw, sizeof(hashed_pw)
+  );
+
+  if(result != ARGON2_OK) {
+    return false;
+  }
+
+  strncpy(acc->password_hash, hashed_pw, HASH_LENGTH - 1);
+  acc->password_hash[HASH_LENGTH - 1] = '\0';
+
+  return true;
 }
 
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {
