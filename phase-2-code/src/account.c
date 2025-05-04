@@ -183,10 +183,12 @@ void account_free(account_t *acc) {
 
 
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) plaintext_password;
-  return false;
+  if(argon2id_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) == ARGON2_OK) {
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 int generate_salt(uint8_t *salt, size_t length) {
