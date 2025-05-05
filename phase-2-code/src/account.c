@@ -9,6 +9,19 @@
 #include <argon2.h>
 #include <sys/random.h>
 
+// Define default Argon2id parameters
+#ifndef ARGON2_T_COST
+#define ARGON2_T_COST 5
+#endif
+
+#ifndef ARGON2_M_COST
+#define ARGON2_M_COST 7168
+#endif
+
+#ifndef ARGON2_PARALLELISM
+#define ARGON2_PARALLELISM 1
+#endif
+
 #define SALT_LENGTH 16
 
 // #define BCRYPT_WORK_FACTOR 12
@@ -181,51 +194,82 @@ void account_free(account_t *acc) {
 }
 
 
+/**
+ * \brief           Validates the provided password against the stored hashed password in the account.
+ * \param[in]       acc: Pointer to the account containing the hashed password.
+ * \param[in]       plaintext_password: The password to validate.
+ * \return          True if the password matches the stored hash, false otherwise.
+ *
+ * \note            Preconditions: both params are non-NULL and plaintext_password is a valid, NULL-terminated string.
+ */
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
   if(argon2id_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) == ARGON2_OK) {
+    log_message(LOG_INFO, "Password verified for account %d.\n", acc->account_id);
     return true;
   }
   else {
+    log_message(LOG_INFO, "Password verification failed for account %d.\n", acc->account_id);
     return false;
   }
 }
 
+/**
+ * \brief           Generates a unique salt to be used in the password hashing process
+ * \param[in]       salt: Pointer to byte buffer to store the generated salt
+ * \param[in]       length: Length of the salt buffer in bytes
+ * \return          0 on successful salt generation, -1 otherwise.
+ * 
+ * \note            Preconditions: salt is non-NULL and length > 0.
+ */
 int generate_salt(uint8_t *salt, size_t length) {
+  // Set flags to 0 as none are needed.
   ssize_t result = getrandom(salt, length, 0);
 
+  // Check for failure of getrandom()
   if(result < 0 || (size_t)result != length) {
+    log_message(LOG_WARN, "getrandom() failed. Return value: %d\n", result);
     return -1;
   }
   return 0;
 }
 
+/**
+ * \brief           Updates the password of the given account.
+ * \param[in]       acc: Pointer to the account whose password will be updated.
+ * \param[in]       new_plaintext_password: The new password to be set.
+ * \return          True if the password was successfully updated, false otherwise.
+ * 
+ * \note            Preconditions: both params are non-NULL and new_plaintext_password is a valid, NULL-terminated string.
+ */
 bool account_update_password(account_t *acc, const char *new_plaintext_password) {  
 
   char hashed_pw[HASH_LENGTH];
   uint8_t salt[SALT_LENGTH];
   
+  // Check for successful salt generation
   if(generate_salt(salt, SALT_LENGTH) != 0) {
     return false;
   }
 
   // Argon2id parameters 
-  uint32_t t_cost = 5;
-  uint32_t m_cost = 7168;
-  uint32_t parallelism = 1;
+  uint32_t t_cost = ARGON2_T_COST; // Time cost
+  uint32_t m_cost = ARGON2_M_COST; // Memory cost
+  uint32_t parallelism = ARGON2_PARALLELISM;
 
-  //TODO: check if argon2id expects NULL terminated salt
   int result = argon2id_hash_encoded( 
     t_cost, m_cost, parallelism,
     new_plaintext_password, strlen(new_plaintext_password),
     salt, SALT_LENGTH,
-    HASH_LENGTH - 1,
-    hashed_pw, sizeof(hashed_pw)
+    32,
+    hashed_pw, HASH_LENGTH
   );
 
   if(result != ARGON2_OK) {
+    log_message(LOG_WARN, "Argon2id hashing failed. Output: %d\n", result);
     return false;
   }
 
+  // Copy password hash to account struct, ensuring NULL termination.
   strncpy(acc->password_hash, hashed_pw, HASH_LENGTH - 1);
   acc->password_hash[HASH_LENGTH - 1] = '\0';
 

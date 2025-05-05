@@ -1,4 +1,4 @@
-#include "account.h"
+#include "../src/account.h"
 #include <stdio.h>
 
 void test_account_update_password(account_t *acc, const char *new_plaintext_password) {
@@ -67,6 +67,6 @@ int main() {
     test_account_validate_password(&test_acc, "secure_password", true);
     test_account_validate_password(&test_acc, "wrong_password", false);
 
-    printf("Password function tests complete.");
+    printf("Password function tests complete.\n");
     return 0;
 }
