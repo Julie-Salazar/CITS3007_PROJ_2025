@@ -1,44 +1,45 @@
 #include "../src/account.h"
+#include "../src/logging.h"
 #include <stdio.h>
 
 void test_account_update_password(account_t *acc, const char *new_plaintext_password) {
     
-    printf("Starting password update test.\n");
-    printf("Updating password to: %s\n", new_plaintext_password);
+    log_message(LOG_DEBUG, "Starting password update test.");
+    log_message(LOG_DEBUG, "Updating password to: %s", new_plaintext_password);
 
     bool result = account_update_password(acc, new_plaintext_password);
 
     if (result != true) {
-        printf("Test result: FAIL\n");
-        printf("Salt generation or password hashing failed.\n");
+        log_message(LOG_DEBUG, "Test result: FAIL");
+        log_message(LOG_DEBUG, "Salt generation or password hashing failed.");
     }
     else if (account_validate_password(acc, new_plaintext_password)) {
-        printf("Test resault: PASS\n");
+        log_message(LOG_DEBUG, "Test resault: PASS");
     }
     else {
-        printf("Test result: FAIL\n");
-        printf("New password validation failed.\n");
+        log_message(LOG_DEBUG, "Test result: FAIL");
+        log_message(LOG_DEBUG, "New password validation failed.");
     }
 
-    printf("----------------------------------------\n");
+    log_message(LOG_INFO, "----------------------------------------");
 
 }
 
 void test_account_validate_password(const account_t *acc, const char *plaintext_password, bool expected_output) {
-    printf("Starting password validation test.\n");
-    printf("Attempted password: %s\n", plaintext_password);
+    log_message(LOG_DEBUG, "Starting password validation test.");
+    log_message(LOG_DEBUG, "Attempted password: %s", plaintext_password);
     
     bool result = account_validate_password(acc, plaintext_password);
 
     if (result == expected_output) {
-        printf("Test result: PASS\n");
+        log_message(LOG_DEBUG, "Test result: PASS");
     }
     else {
-        printf("Test result: FAIL\n");
-        printf("\nExpected result: %d\n", expected_output);
-        printf("Actual result: %d\n", result);
+        log_message(LOG_DEBUG, "Test result: FAIL");
+        log_message(LOG_DEBUG, "\nExpected result: %d", expected_output);
+        log_message(LOG_DEBUG, "Actual result: %d", result);
     }
-    printf("----------------------------------------\n");
+    log_message(LOG_INFO, "----------------------------------------");
 }
 
 int main() {
@@ -59,14 +60,14 @@ int main() {
     
     char *new_pw = "secure_password";
     
-    printf("Starting password function tests.");
-    printf("----------------------------------------\n");
+    log_message(LOG_DEBUG, "Starting password function tests.");
+    log_message(LOG_INFO, "----------------------------------------");
 
     test_account_update_password(&test_acc, new_pw);
 
     test_account_validate_password(&test_acc, "secure_password", true);
     test_account_validate_password(&test_acc, "wrong_password", false);
 
-    printf("Password function tests complete.\n");
+    log_message(LOG_DEBUG, "Password function tests complete.");
     return 0;
 }

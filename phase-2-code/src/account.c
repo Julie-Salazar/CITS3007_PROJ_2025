@@ -8,6 +8,7 @@
 #include "logging.h"
 #include <argon2.h>
 #include <sys/random.h>
+#include "banned.h"
 
 // Define default Argon2id parameters
 #ifndef ARGON2_T_COST
@@ -204,11 +205,11 @@ void account_free(account_t *acc) {
  */
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
   if(argon2id_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) == ARGON2_OK) {
-    log_message(LOG_INFO, "Password verified for account %d.\n", acc->account_id);
+    log_message(LOG_INFO, "Password verified for account %d.", acc->account_id);
     return true;
   }
   else {
-    log_message(LOG_INFO, "Password verification failed for account %d.\n", acc->account_id);
+    log_message(LOG_INFO, "Password verification failed for account %d.", acc->account_id);
     return false;
   }
 }
@@ -227,7 +228,7 @@ int generate_salt(uint8_t *salt, size_t length) {
 
   // Check for failure of getrandom()
   if(result < 0 || (size_t)result != length) {
-    log_message(LOG_WARN, "getrandom() failed. Return value: %d\n", result);
+    log_message(LOG_WARN, "getrandom() failed. Return value: %d", result);
     return -1;
   }
   return 0;
@@ -265,7 +266,7 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
   );
 
   if(result != ARGON2_OK) {
-    log_message(LOG_WARN, "Argon2id hashing failed. Output: %d\n", result);
+    log_message(LOG_WARN, "Argon2id hashing failed. Output: %d", result);
     return false;
   }
 
