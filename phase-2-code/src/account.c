@@ -8,7 +8,6 @@
 #include "logging.h"
 #include <argon2.h>
 #include <sys/random.h>
-#include "banned.h"
 
 #define SALT_LENGTH 16
 
