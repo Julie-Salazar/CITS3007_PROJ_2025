@@ -1,6 +1,7 @@
 #include "../src/account.h"
 #include "../src/logging.h"
 #include <stdio.h>
+#include <string.h>
 
 void test_account_update_password(account_t *acc, const char *new_plaintext_password) {
     
@@ -21,7 +22,7 @@ void test_account_update_password(account_t *acc, const char *new_plaintext_pass
         log_message(LOG_DEBUG, "New password validation failed.");
     }
 
-    log_message(LOG_INFO, "----------------------------------------");
+    log_message(LOG_DEBUG, "----------------------------------------");
 
 }
 
@@ -39,7 +40,35 @@ void test_account_validate_password(const account_t *acc, const char *plaintext_
         log_message(LOG_DEBUG, "\nExpected result: %d", expected_output);
         log_message(LOG_DEBUG, "Actual result: %d", result);
     }
-    log_message(LOG_INFO, "----------------------------------------");
+    log_message(LOG_DEBUG, "----------------------------------------");
+}
+
+void test_unique_hash_generation(account_t *acc) {
+    log_message(LOG_DEBUG, "Starting unique hash generation test.");
+
+    account_update_password(acc, "test_password");
+
+    // Store original password hash and ensure NULL termination
+    char old_password_hash[HASH_LENGTH];
+    strncpy(old_password_hash, acc->password_hash, HASH_LENGTH - 1);
+    old_password_hash[HASH_LENGTH - 1] = '\0';
+
+    account_update_password(acc, "test_password");
+
+    // Store new password hash for same password and ensure NULL termination
+    char new_password_hash[HASH_LENGTH];
+    strncpy(new_password_hash, acc->password_hash, HASH_LENGTH - 1);
+    new_password_hash[HASH_LENGTH - 1] = '\0';
+
+    if(strncmp(old_password_hash, new_password_hash, HASH_LENGTH - 1) != 0) {
+        log_message(LOG_DEBUG, "Test result: PASS");
+    }
+    else {
+        log_message(LOG_DEBUG, "Test result: FAIL");
+        log_message(LOG_DEBUG, "Password hashes for the same password are not unique.");
+    }
+
+    log_message(LOG_DEBUG, "----------------------------------------");
 }
 
 int main() {
@@ -61,13 +90,16 @@ int main() {
     char *new_pw = "secure_password";
     
     log_message(LOG_DEBUG, "Starting password function tests.");
-    log_message(LOG_INFO, "----------------------------------------");
+    log_message(LOG_DEBUG, "----------------------------------------");
 
     test_account_update_password(&test_acc, new_pw);
 
     test_account_validate_password(&test_acc, "secure_password", true);
     test_account_validate_password(&test_acc, "wrong_password", false);
 
+    test_unique_hash_generation(&test_acc);
+
     log_message(LOG_DEBUG, "Password function tests complete.");
+
     return 0;
 }
