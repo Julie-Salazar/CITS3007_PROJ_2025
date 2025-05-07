@@ -17,3 +17,6 @@ bin/
 XXX/
 *.~[0-9]~
 *.zip
+# backup files
+*.BAK
+*.NEW
