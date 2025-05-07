@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include "logging.h"
+#include <fcntl.h>
 
 
 // #define BCRYPT_WORK_FACTOR 12
@@ -199,8 +200,9 @@ void account_record_login_success(account_t *acc, ip4_addr_t ip) {
     acc->last_login_time = time(NULL);
     acc->last_ip = ip;  
   }
+}
 
-void account_record_login_faiure(account_t *acc) {
+void account_record_login_failure(account_t *acc) {
   if (acc != NULL) {
     acc->login_count = 0; // reset login count
     acc->login_fail_count++;
@@ -208,7 +210,7 @@ void account_record_login_faiure(account_t *acc) {
 }
 
 bool account_is_banned(const account_t *acc) {
-  // check account is non-null
+  // remove the contents of this function and replace it with your own code.
   (void) acc;
   return false;
 }
@@ -238,9 +240,21 @@ void account_set_email(account_t *acc, const char *new_email) {
 }
 
 bool account_print_summary(const account_t *acct, int fd) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acct;
-  (void) fd;
-  return false;
+  // check if account is non-NULL
+  if (!acct) {
+    return false;
+  }
+  // check if file descriptor is valid and open for writing 
+  if (fcntl(fd, F_GETFD) == -1) {
+    return false;
+}
+  // print account summary to the file descriptor
+  dprintf(fd, "User ID: %s\n", acct->userid);
+  dprintf(fd, "Email: %s\n", acct->email);
+  dprintf(fd, "Number of successful login attempts: %u\n", acct->login_count);
+  dprintf(fd, "Number of unsuccessful login attempts: %u\n", acct->login_fail_count);
+  dprintf(fd, "Time of last successful login: %ld\n", acct->last_login_time);
+  dprintf(fd, "Last IP connected from: %u\n", acct->last_ip);
+  return true;
 }
 
