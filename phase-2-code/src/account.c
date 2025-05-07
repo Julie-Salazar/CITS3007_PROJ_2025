@@ -193,18 +193,22 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 }
 
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) ip;
-}
+  if (acc != NULL) { 
+    acc->login_fail_count = 0; // reset login fail count
+    acc->login_count++;
+    acc->last_login_time = time(NULL);
+    acc->last_ip = ip;  
+  }
 
-void account_record_login_failure(account_t *acc) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
+void account_record_login_faiure(account_t *acc) {
+  if (acc != NULL) {
+    acc->login_count = 0; // reset login count
+    acc->login_fail_count++;
+  }
 }
 
 bool account_is_banned(const account_t *acc) {
-  // remove the contents of this function and replace it with your own code.
+  // check account is non-null
   (void) acc;
   return false;
 }
