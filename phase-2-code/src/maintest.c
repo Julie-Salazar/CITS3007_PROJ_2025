@@ -1,3 +1,5 @@
+#define CITS3007_PERMISSIVE
+
 #include <stdio.h>
 #include <time.h>
 #include "account.h"

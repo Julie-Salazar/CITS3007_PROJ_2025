@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 199309L
+
 #include "login.h"
 #include "db.h"
 #include "logging.h"

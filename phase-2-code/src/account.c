@@ -8,9 +8,9 @@
 #include <limits.h>
 #include <unistd.h>
 #include "logging.h"
+#include <fcntl.h>
 #include <argon2.h>
 #include <sys/random.h>
-#include "banned.h"
 
 
 // Define default Argon2id parameters
@@ -358,6 +358,21 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 
 
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {
+
+  if (acc != NULL) { 
+    acc->login_fail_count = 0; // reset login fail count
+    acc->login_count++;
+    acc->last_login_time = time(NULL);
+    acc->last_ip = ip;  
+  }
+}
+
+void account_record_login_failure(account_t *acc) {
+  if (acc != NULL) {
+    acc->login_count = 0; // reset login count
+    acc->login_fail_count++;
+  }
+
     if (!acc) {
         return;
     }
@@ -374,6 +389,7 @@ void account_record_login_failure(account_t *acc) {
     }
 
     acc->login_fail_count++;
+
 }
 
 /**
@@ -496,6 +512,24 @@ void account_set_email(account_t *acc, const char *new_email) {
 }
 
 bool account_print_summary(const account_t *acct, int fd) {
+
+  // check if account is non-NULL
+  if (!acct) {
+    return false;
+  }
+  // check if file descriptor is valid and open for writing 
+  if (fcntl(fd, F_GETFD) == -1) {
+    return false;
+}
+  // print account summary to the file descriptor
+  dprintf(fd, "User ID: %s\n", acct->userid);
+  dprintf(fd, "Email: %s\n", acct->email);
+  dprintf(fd, "Number of successful login attempts: %u\n", acct->login_count);
+  dprintf(fd, "Number of unsuccessful login attempts: %u\n", acct->login_fail_count);
+  dprintf(fd, "Time of last successful login: %ld\n", acct->last_login_time);
+  dprintf(fd, "Last IP connected from: %u\n", acct->last_ip);
+  return true;
+
     if (!acct) {
         return false;
     }
@@ -526,5 +560,6 @@ bool account_print_summary(const account_t *acct, int fd) {
     }
 
     return write(fd, buffer, len) == len;
+
 }
 
