@@ -31,6 +31,17 @@
 // Forward declaration of secure_zero_memory
 static void secure_zero_memory(void *ptr, size_t len);
 
+
+/**
+*@brief Creates a new account.
+*
+*This fuction creates a new account with the provided user ID, password, email, and birthdate.
+*
+*@param userid The user ID.
+*@param plaintext_password The password in plaintext.
+*@param email The email address.
+*@param birthdate The birthdate in the format "YYYY-MM-DD".
+*/
 account_t *account_create(const char *userid, const char *plaintext_password,
                           const char *email, const char *birthdate)
 {
@@ -155,10 +166,8 @@ account_t *account_create(const char *userid, const char *plaintext_password,
   char hashed_pw[HASH_LENGTH];
   uint8_t salt[SALT_LENGTH];
 
-  if (generate_salt(salt, SALT_LENGTH) != 0) {
-  secure_zero_memory(account, sizeof(account_t));
-  free(account);
-  return NULL;
+  for (size_t i = 0; i < SALT_LENGTH; i++) {
+    salt[i] = (unsigned char)(rand() % 256);
   }
 
   int result = argon2id_hash_encoded(
@@ -172,9 +181,9 @@ account_t *account_create(const char *userid, const char *plaintext_password,
   );
 
   if (result != ARGON2_OK) {
-  log_message(LOG_ERROR, "account_create: Argon2id hashing failed");
-  secure_zero_memory(account, sizeof(account_t));
-  free(account);
+    log_message(LOG_ERROR, "account_create: Argon2id hashing failed");
+    secure_zero_memory(account, sizeof(account_t));
+    free(account);
   return NULL;
   }
 
@@ -188,10 +197,11 @@ account_t *account_create(const char *userid, const char *plaintext_password,
   account->birthdate[BIRTHDATE_LENGTH - 1] = '\0';
 
   unsigned int rand_val = (unsigned int)rand();
-  time_t current_time = time(NULL);
+  time_t current_time = time(NULL); 
+
   if (current_time == (time_t)-1) {
-  secure_zero_memory(account, sizeof(account_t));
-  free(account);
+    secure_zero_memory(account, sizeof(account_t));
+    free(account);
   return NULL;
   }
   account->account_id = (int64_t)current_time ^ ((int64_t)rand_val << 32 | (int64_t)rand_val);
@@ -202,9 +212,6 @@ account_t *account_create(const char *userid, const char *plaintext_password,
   account->last_login_time = 0;
   account->last_ip = 0;
   
-  // Instead, just indicate that we would hash the password
-  log_message(LOG_INFO, "account_create: Password would be hashed with Argon2id (placeholder)");
-
   // For now, zero out the password hash area
   memset(account->password_hash, 0, HASH_LENGTH);
 
@@ -218,8 +225,7 @@ account_t *account_create(const char *userid, const char *plaintext_password,
 
   // Set unique account ID using a more secure method
   // Combine current time with a random number to reduce collision chance
-  unsigned int rand_val = (unsigned int)rand(); // Not cryptographically secure
-  time_t current_time = time(NULL);
+
   
   if (current_time == (time_t)(-1)) {
     log_message(LOG_ERROR, "account_create: Failed to get current time");
@@ -270,6 +276,8 @@ void account_free(account_t *acc) {
   
   log_message(LOG_DEBUG, "account_free: Account memory cleared and freed");
 }
+
+
 
 
 
