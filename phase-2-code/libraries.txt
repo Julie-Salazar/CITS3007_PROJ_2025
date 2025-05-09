@@ -4,3 +4,4 @@
 # which will tell you the pkg-config name.
 
 libargon2
+argon2

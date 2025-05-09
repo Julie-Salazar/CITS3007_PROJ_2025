@@ -27,13 +27,6 @@
 #endif
 
 #define SALT_LENGTH 16
-=======
-// Argon2 parameters would be defined here
-// #define SALT_LENGTH 16
-// #define HASH_OUTPUT_LENGTH 32
-// #define ARGON2_TIME_COST 3
-// #define ARGON2_MEMORY_COST (1 << 16)  // 64 MiB
-// #define ARGON2_PARALLELISM 4
 
 // Forward declaration of secure_zero_memory
 static void secure_zero_memory(void *ptr, size_t len);
@@ -158,46 +151,56 @@ account_t *account_create(const char *userid, const char *plaintext_password,
   strncpy(account->userid, userid, USER_ID_LENGTH - 1);
   account->userid[USER_ID_LENGTH - 1] = '\0';
 
-  // Password hashing with Argon2id would be done here
-  // Using a commented placeholder for now
-  /*
-  // Generate a secure random salt
-  unsigned char salt[SALT_LENGTH];
-  // In a real implementation, use a CSPRNG like:
-  // if (RAND_bytes(salt, SALT_LENGTH) != 1) {
-  //     log_message(LOG_ERROR, "account_create: Failed to generate secure random salt");
-  //     free(account);
-  //     return NULL;
-  // }
-  
-  // For demonstration, using rand() (NOT secure for production)
-  for (size_t i = 0; i < SALT_LENGTH; i++) {
-    salt[i] = (unsigned char)(rand() % 256);
+  // Hash the password securely using argon2id
+  char hashed_pw[HASH_LENGTH];
+  uint8_t salt[SALT_LENGTH];
+
+  if (generate_salt(salt, SALT_LENGTH) != 0) {
+  secure_zero_memory(account, sizeof(account_t));
+  free(account);
+  return NULL;
   }
 
-  // Store salt in the password_hash field
-  memcpy(account->password_hash, salt, SALT_LENGTH);
-  
-  // Hash password with Argon2id
-  int result = argon2id_hash_raw(
-      ARGON2_TIME_COST,
-      ARGON2_MEMORY_COST,
-      ARGON2_PARALLELISM,
-      plaintext_password,
-      strlen(plaintext_password),
-      salt,
-      SALT_LENGTH,
-      account->password_hash + SALT_LENGTH,
-      HASH_OUTPUT_LENGTH
+  int result = argon2id_hash_encoded(
+  ARGON2_T_COST,
+  ARGON2_M_COST,
+  ARGON2_PARALLELISM,
+  plaintext_password, strlen(plaintext_password),
+  salt, SALT_LENGTH,
+  32,
+  hashed_pw, HASH_LENGTH
   );
-  
+
   if (result != ARGON2_OK) {
-    log_message(LOG_ERROR, "account_create: Failed to hash password");
-    secure_zero_memory(account, sizeof(account_t));
-    free(account);
-    return NULL;
+  log_message(LOG_ERROR, "account_create: Argon2id hashing failed");
+  secure_zero_memory(account, sizeof(account_t));
+  free(account);
+  return NULL;
   }
-  */
+
+  strncpy(account->password_hash, hashed_pw, HASH_LENGTH - 1);
+  account->password_hash[HASH_LENGTH - 1] = '\0';
+
+  strncpy(account->email, email, EMAIL_LENGTH - 1);
+  account->email[EMAIL_LENGTH - 1] = '\0';
+
+  strncpy(account->birthdate, birthdate, BIRTHDATE_LENGTH - 1);
+  account->birthdate[BIRTHDATE_LENGTH - 1] = '\0';
+
+  unsigned int rand_val = (unsigned int)rand();
+  time_t current_time = time(NULL);
+  if (current_time == (time_t)-1) {
+  secure_zero_memory(account, sizeof(account_t));
+  free(account);
+  return NULL;
+  }
+  account->account_id = (int64_t)current_time ^ ((int64_t)rand_val << 32 | (int64_t)rand_val);
+  account->unban_time = 0;
+  account->expiration_time = 0;
+  account->login_count = 0;
+  account->login_fail_count = 0;
+  account->last_login_time = 0;
+  account->last_ip = 0;
   
   // Instead, just indicate that we would hash the password
   log_message(LOG_INFO, "account_create: Password would be hashed with Argon2id (placeholder)");
