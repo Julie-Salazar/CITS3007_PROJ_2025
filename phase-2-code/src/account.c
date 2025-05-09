@@ -10,8 +10,6 @@
 #include "logging.h"
 #include <argon2.h>
 #include <sys/random.h>
-#include "banned.h"
-
 
 // Define default Argon2id parameters
 #ifndef ARGON2_T_COST
@@ -27,7 +25,7 @@
 #endif
 
 #define SALT_LENGTH 16
-=======
+
 // Argon2 parameters would be defined here
 // #define SALT_LENGTH 16
 // #define HASH_OUTPUT_LENGTH 32

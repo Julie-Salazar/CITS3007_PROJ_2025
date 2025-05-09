@@ -1,3 +1,5 @@
+#define CITS3007_PERMISSIVE
+
 #include "../src/account.h"
 #include "../src/logging.h"
 #include <stdio.h>
