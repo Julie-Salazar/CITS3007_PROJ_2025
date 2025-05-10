@@ -52,7 +52,8 @@ PKG_LDFLAGS := $(if $(strip $(PKG_DEPS)),$(shell pkg-config --libs $(PKG_DEPS)))
 # not necessarily use the same flags when testing your code.
 DEBUG = -g -fno-omit-frame-pointer
 CFLAGS = $(DEBUG) -std=c11 -pedantic-errors -Wall -Wextra $(INC_FLAGS) $(PKG_CFLAGS)
-LDFLAGS = $(PKG_LDFLAGS) -lcrypto
+
+LDFLAGS = $(PKG_LDFLAGS) -lcrypto -largon2
 
 # how to make a .c file from a .ts file
 %.c: %.ts

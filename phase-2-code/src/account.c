@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 199309L
 
+#include <unistd.h>
 #include "account.h"
 #include <ctype.h>
 #include <string.h>
@@ -8,12 +9,13 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <limits.h>
-#include <unistd.h>
 #include "logging.h"
 
 #include <fcntl.h>
 #include <argon2.h>
 #include <sys/random.h>
+#include "banned.h"
+
 
 // Define default Argon2id parameters
 #ifndef ARGON2_T_COST
