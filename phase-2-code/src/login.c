@@ -14,6 +14,7 @@
 #include <time.h>
 #include "banned.h"
 
+
 #define SESSION_DURATION (3600 * 24)  // 24-hour session duration
 #define MAX_FAILED_ATTEMPTS 5         // Maximum number of failed attempts
 #define BAN_DURATION (3600 * 24)      // Ban duration (24 hours)
@@ -266,4 +267,8 @@ login_result_t handle_login(const char *userid, const char *password,
 
     log_message(LOG_INFO, "Successful login for user '%s' from IP %u", userid, client_ip);
     return LOGIN_SUCCESS;
+
 }
+
+}
+
