@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 199309L
+
 #include "account.h"
 #include <ctype.h>
 #include <string.h>
@@ -11,7 +13,6 @@
 #include <fcntl.h>
 #include <argon2.h>
 #include <sys/random.h>
-
 
 // Define default Argon2id parameters
 #ifndef ARGON2_T_COST
@@ -287,7 +288,7 @@ void account_free(account_t *acc) {
  * \param[in]       plaintext_password: The password to validate.
  * \return          True if the password matches the stored hash, false otherwise.
  *
- * \note            Preconditions: both params are non-NULL and plaintext_password is a valid, NULL-terminated string.
+ * \pre             Both params are non-NULL and plaintext_password is a valid, NULL-terminated string.
  */
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
   if(argon2id_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) == ARGON2_OK) {
@@ -306,7 +307,7 @@ bool account_validate_password(const account_t *acc, const char *plaintext_passw
  * \param[in]       length: Length of the salt buffer in bytes
  * \return          0 on successful salt generation, -1 otherwise.
  * 
- * \note            Preconditions: salt is non-NULL and length > 0.
+ * \pre             Salt is non-NULL and length > 0.
  */
 int generate_salt(uint8_t *salt, size_t length) {
   // Set flags to 0 as none are needed.
@@ -387,10 +388,11 @@ void account_record_login_failure(account_t *acc) {
 
     acc->login_count++;
     acc->last_login_time = time(NULL);
-    acc->last_ip = ip;
+    // acc->last_ip = ip;
     acc->login_fail_count = 0; // Reset the number of failures
 }
 
+/*
 void account_record_login_failure(account_t *acc) {
     if (!acc) {
         return;
@@ -399,6 +401,7 @@ void account_record_login_failure(account_t *acc) {
     acc->login_fail_count++;
 
 }
+*/
 
 /**
 *@brief Checks if the account is currently banned.
