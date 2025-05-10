@@ -1,2 +1,6 @@
 *.NEW
 *.BAK
+*.NEW
+*.BAK
+build/
+bin/

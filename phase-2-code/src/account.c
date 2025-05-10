@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include "logging.h"
+#include "banned.h"
 
 
 // #define BCRYPT_WORK_FACTOR 12
