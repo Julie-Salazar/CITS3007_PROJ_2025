@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 199309L
+#define _GNU_SOURCE
 
 #include <unistd.h>
 #include "account.h"
@@ -47,7 +48,6 @@ static void secure_zero_memory(void *ptr, size_t len);
 *@param birthdate The birthdate in the format "YYYY-MM-DD".
 */
 
-#include "banned.h"
 
 
 // #define BCRYPT_WORK_FACTOR 12

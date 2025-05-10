@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <time.h>
 #include <unistd.h>
+#include "banned.h"
 
 
 //Test case structure
