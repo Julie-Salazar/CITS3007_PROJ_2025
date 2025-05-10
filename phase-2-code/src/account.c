@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include "logging.h"
+
 #include <fcntl.h>
 #include <argon2.h>
 #include <sys/random.h>
@@ -43,6 +44,14 @@ static void secure_zero_memory(void *ptr, size_t len);
 *@param email The email address.
 *@param birthdate The birthdate in the format "YYYY-MM-DD".
 */
+
+#include "banned.h"
+
+
+// #define BCRYPT_WORK_FACTOR 12
+
+
+
 account_t *account_create(const char *userid, const char *plaintext_password,
                           const char *email, const char *birthdate)
 {
