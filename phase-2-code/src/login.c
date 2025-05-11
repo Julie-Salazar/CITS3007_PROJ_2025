@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
+#include "banned.h"
 
 
 #define SESSION_DURATION (3600 * 24)  // 24-hour session duration
