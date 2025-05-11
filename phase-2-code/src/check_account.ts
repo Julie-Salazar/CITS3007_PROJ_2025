@@ -4,6 +4,7 @@
 
 #include <check.h>
 #include "login.h"
+#include "account.h"
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -511,7 +512,7 @@ void print_test_starting(const char* test_name) {
     
     account_free(test_account);
     printf("Test passed: Login success scenario works correctly\n");
-    
+
 #test test_login_failure_handling
     print_test_starting("test_login_failure_handling");
     
