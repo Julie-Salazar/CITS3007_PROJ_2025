@@ -185,36 +185,14 @@ account_t *account_create(const char *userid, const char *plaintext_password,
   strncpy(account->userid, userid, USER_ID_LENGTH - 1);
   account->userid[USER_ID_LENGTH - 1] = '\0';
 
-  // Hash the password securely using argon2id
-  char hashed_pw[HASH_LENGTH];
-  uint8_t salt[SALT_LENGTH];
+  int result = account_update_password(account, plaintext_password);
 
-  if (generate_salt(salt, SALT_LENGTH) != 0) {
-    log_message(LOG_ERROR, "account_create: Failed to generate salt");
+  if (!result) {
+    log_message(LOG_ERROR, "account_create: Argon2id hashing failed");
     secure_zero_memory(account, sizeof(account_t));
     free(account);
     return NULL;
   }
-
-  int result = argon2id_hash_encoded(
-  ARGON2_T_COST,
-  ARGON2_M_COST,
-  ARGON2_PARALLELISM,
-  plaintext_password, strlen(plaintext_password),
-  salt, SALT_LENGTH,
-  32,
-  hashed_pw, HASH_LENGTH
-  );
-
-  if (result != ARGON2_OK) {
-    log_message(LOG_ERROR, "account_create: Argon2id hashing failed");
-    secure_zero_memory(account, sizeof(account_t));
-    free(account);
-  return NULL;
-  }
-
-  strncpy(account->password_hash, hashed_pw, HASH_LENGTH - 1);
-  account->password_hash[HASH_LENGTH - 1] = '\0';
   
   // Initialize default account settings
   account->unban_time = 0;        // Not banned
@@ -316,12 +294,13 @@ static void secure_zero_memory(void *ptr, size_t len) {
 
 
 /**
- * \brief           Validates the provided password against the stored hashed password in the account.
- * \param[in]       acc: Pointer to the account containing the hashed password.
- * \param[in]       plaintext_password: The password to validate.
- * \return          True if the password matches the stored hash, false otherwise.
+ * @brief           Validates the provided password against the stored hashed password in the account.
+ * @param[in]       acc: Pointer to the account containing the hashed password.
+ * @param[in]       plaintext_password: The password to validate.
+ * @return          True if the password matches the stored hash, false otherwise.
  *
- * \pre             Both params are non-NULL and plaintext_password is a valid, NULL-terminated string.
+ * @pre             Both params are non-NULL. 
+ * @pre             The new_plaintext_password param is a valid, NULL-terminated string.
  */
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
   if(argon2id_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) == ARGON2_OK) {
@@ -335,12 +314,13 @@ bool account_validate_password(const account_t *acc, const char *plaintext_passw
 }
 
 /**
- * \brief           Generates a unique salt to be used in the password hashing process
- * \param[in]       salt: Pointer to byte buffer to store the generated salt
- * \param[in]       length: Length of the salt buffer in bytes
- * \return          0 on successful salt generation, -1 otherwise.
+ * @brief           Generates a unique salt to be used in the password hashing process
+ * @param[in]       salt: Pointer to byte buffer to store the generated salt
+ * @param[in]       length: Length of the salt buffer in bytes
+ * @return          0 on successful salt generation, -1 otherwise.
  * 
- * \pre             Salt is non-NULL and length > 0.
+ * @pre             Salt is non-NULL.
+ * @pre             The param length is greater than 0.
  */
 int generate_salt(uint8_t *salt, size_t length) {
   // Set flags to 0 as none are needed.
@@ -355,12 +335,13 @@ int generate_salt(uint8_t *salt, size_t length) {
 }
 
 /**
- * \brief           Updates the password of the given account.
- * \param[in]       acc: Pointer to the account whose password will be updated.
- * \param[in]       new_plaintext_password: The new password to be set.
- * \return          True if the password was successfully updated, false otherwise.
+ * @brief           Updates the password of the given account.
+ * @param[in]       acc: Pointer to the account whose password will be updated.
+ * @param[in]       new_plaintext_password: The new password to be set.
+ * @return          True if the password was successfully updated, false otherwise.
  * 
- * \note            Preconditions: both params are non-NULL and new_plaintext_password is a valid, NULL-terminated string.
+ * @pre             Both params are non-NULL. 
+ * @pre             The new_plaintext_password param is a valid, NULL-terminated string.
  */
 bool account_update_password(account_t *acc, const char *new_plaintext_password) {  
 
