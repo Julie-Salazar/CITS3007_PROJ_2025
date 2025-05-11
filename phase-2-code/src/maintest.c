@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <time.h>
 #include "account.h"
-#include "banned.h"
 // THis is just to test the ban, expire and account create funtions
 int main() {
     // Create an account (valid birthdate assumed)
