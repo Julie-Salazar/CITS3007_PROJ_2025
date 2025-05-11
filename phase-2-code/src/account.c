@@ -34,6 +34,14 @@
 #define SALT_LENGTH 16
 
 /**
+ * @brief Generates a unique salt to be used in the password hashing process
+ * @param salt Pointer to byte buffer to store the generated salt
+ * @param length Length of the salt buffer in bytes
+ * @return 0 on successful salt generation, -1 otherwise
+ */
+static int generate_salt(uint8_t *salt, size_t length);
+
+/**
  * @brief Securely clears a memory region by overwriting it with zeros
  *
  * @param ptr Pointer to the memory to be cleared
@@ -167,17 +175,6 @@ account_t *account_create(const char *userid, const char *plaintext_password,
     return NULL;
   }
 
-
-/**
- * @brief Allocates memory for a new account structure
- * 
- * Allocates memory for the account structure using calloc to ensure all fields
- * are initialized to zero. Handles allocation failure by logging an error
- * and returning NULL.
- * 
- * @return Pointer to newly allocated account structure, or NULL if allocation fails
- */
-  
 account_t *account = (account_t *)calloc(1, sizeof(account_t));
 if (account == NULL) {
   log_message(LOG_ERROR, "account_create: Failed to allocate memory for account");
