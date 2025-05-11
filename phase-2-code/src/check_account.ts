@@ -3,8 +3,6 @@
 #define CITS3007_PERMISSIVE
 
 #include <check.h>
-#include "login.h"
-#include "account.h"
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
