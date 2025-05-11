@@ -12,7 +12,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
-#include "banned.h"
 
 /**
  * @file login.c

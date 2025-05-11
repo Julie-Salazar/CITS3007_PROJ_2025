@@ -43,7 +43,7 @@ void print_test_starting(const char* test_name) {
                           );
 
     // Verify account was created
-    ck_assert_ptr_nonnull(res);
+    ck_assert_ptr_ne(res, NULL);
     
     // Check basic account properties
     ck_assert_str_eq(res->userid, userid);
@@ -72,33 +72,33 @@ void print_test_starting(const char* test_name) {
     
     // Test null parameters
     account_t *res = account_create(NULL, "password", "email@test.com", "1990-01-01");
-    ck_assert_ptr_null(res);
+    ck_assert_ptr_eq(res, NULL);
     
     res = account_create("user", NULL, "email@test.com", "1990-01-01");
-    ck_assert_ptr_null(res);
+    ck_assert_ptr_eq(res, NULL);
     
     res = account_create("user", "password", NULL, "1990-01-01");
-    ck_assert_ptr_null(res);
+    ck_assert_ptr_eq(res, NULL);
     
     res = account_create("user", "password", "email@test.com", NULL);
-    ck_assert_ptr_null(res);
+    ck_assert_ptr_eq(res, NULL);
     
     // Test invalid userid
     res = account_create("", "password", "email@test.com", "1990-01-01");
-    ck_assert_ptr_null(res);
+    ck_assert_ptr_eq(res, NULL);
     
     res = account_create("user with spaces", "password", "email@test.com", "1990-01-01");
-    ck_assert_ptr_null(res);
+    ck_assert_ptr_eq(res, NULL);
     
     // Test invalid birthdates
     res = account_create("user", "password", "email@test.com", "invalid");
-    ck_assert_ptr_null(res);
+    ck_assert_ptr_eq(res, NULL);
     
     res = account_create("user", "password", "email@test.com", "1800-01-01"); // Before 1900
-    ck_assert_ptr_null(res);
+    ck_assert_ptr_eq(res, NULL);
     
     res = account_create("user", "password", "email@test.com", "2200-01-01"); // After 2100
-    ck_assert_ptr_null(res);
+    ck_assert_ptr_eq(res, NULL);
     
     printf("Test passed: account_create validates parameters correctly\n");
 
@@ -147,7 +147,7 @@ void print_test_starting(const char* test_name) {
     
     // Create test account
     account_t *acc = account_create("testuser", "password123", "test@example.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     
     // Initial state
     ck_assert_int_eq(acc->login_count, 0);
@@ -178,8 +178,8 @@ void print_test_starting(const char* test_name) {
     
     // Create test account
     account_t *acc = account_create("testuser2", "password123", "test2@example.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
-    
+    ck_assert_ptr_ne(acc, NULL);   
+
     // Initial state - not banned or expired
     ck_assert_int_eq(account_is_banned(acc), 0);
     ck_assert_int_eq(account_is_expired(acc), 0);
@@ -218,7 +218,7 @@ void print_test_starting(const char* test_name) {
     
     // Create test account
     account_t *acc = account_create("emailuser", "password123", "old@example.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     
     // Test valid email update
     const char* new_email = "new@example.com";
@@ -251,7 +251,7 @@ void print_test_starting(const char* test_name) {
     
     // Create test account with some activity
     account_t *acc = account_create("summaryuser", "password123", "summary@example.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     
     // Add some activity
     ip4_addr_t ip = 0x0A0B0C0D; // 10.11.12.13
@@ -260,7 +260,7 @@ void print_test_starting(const char* test_name) {
     // Create a temporary file
     char filename[] = "/tmp/account_summary_test";
     FILE *fp = fopen(filename, "w+");
-    ck_assert_ptr_nonnull(fp);
+    ck_assert_ptr_ne(fp, NULL);
     int fd = fileno(fp);
     
     // Print summary to file
@@ -280,8 +280,8 @@ void print_test_starting(const char* test_name) {
     remove(filename);
     
     // Verify summary contains expected fields
-    ck_assert_ptr_nonnull(strstr(buffer, "User ID: summaryuser"));
-    ck_assert_ptr_nonnull(strstr(buffer, "Email: summary@example.com"));
+    ck_assert_ptr_ne(strstr(buffer, "User ID: summaryuser"), NULL);
+    ck_assert_ptr_ne(strstr(buffer, "Email: summary@example.com"), NULL);
     
     // Clean up
     account_free(acc);
@@ -292,17 +292,17 @@ void print_test_starting(const char* test_name) {
     
     // Test invalid date formats
     account_t *res1 = account_create("user1", "password", "email@test.com", "19900101"); // No hyphens
-    ck_assert_ptr_null(res1);
+    ck_assert_ptr_eq(res1, NULL);
     
     account_t *res2 = account_create("user2", "password", "email@test.com", "1990/01/01"); // Wrong separator
-    ck_assert_ptr_null(res2);
+    ck_assert_ptr_eq(res2, NULL);
     
     // Test invalid dates
     account_t *res3 = account_create("user3", "password", "email@test.com", "1990-02-30"); // Invalid day for Feb
-    ck_assert_ptr_null(res3);
+    ck_assert_ptr_eq(res3, NULL);
     
     account_t *res4 = account_create("user4", "password", "email@test.com", "1990-13-01"); // Invalid month
-    ck_assert_ptr_null(res4);
+    ck_assert_ptr_eq(res4, NULL);
     
     printf("Test passed: account_create correctly validates birthdate format\n");
 
@@ -314,7 +314,7 @@ void print_test_starting(const char* test_name) {
     
     // Test with valid account
     account_t *acc = account_create("freetest", "password", "free@test.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     account_free(acc);
     
     printf("Test passed: account_free safely handles NULL and valid accounts\n");
@@ -323,7 +323,7 @@ void print_test_starting(const char* test_name) {
     print_test_starting("test_account_email_validation");
     
     account_t *acc = account_create("emailtest", "password", "valid@test.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     
     // Test various invalid email formats
     account_set_email(acc, "missing_at_symbol.com");
@@ -346,7 +346,7 @@ void print_test_starting(const char* test_name) {
     print_test_starting("test_ban_functionality");
     
     account_t *acc = account_create("bantest", "password", "ban@test.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     
     // Initially not banned
     ck_assert_int_eq(account_is_banned(acc), 0);
@@ -372,7 +372,7 @@ void print_test_starting(const char* test_name) {
     print_test_starting("test_expiration_functionality");
     
     account_t *acc = account_create("expiretest", "password", "expire@test.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     
     // Initially not expired
     ck_assert_int_eq(account_is_expired(acc), 0);
@@ -398,7 +398,7 @@ void print_test_starting(const char* test_name) {
     print_test_starting("test_login_record_functionality");
     
     account_t *acc = account_create("recordtest", "password", "record@test.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     
     // Test initial state
     ck_assert_int_eq(acc->login_count, 0);
@@ -425,7 +425,7 @@ void print_test_starting(const char* test_name) {
     print_test_starting("test_password_handling");
     
     account_t *acc = account_create("pwtest", "initial_password", "pw@test.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     
     // Should validate with correct password
     ck_assert_int_eq(account_validate_password(acc, "initial_password"), 1);
@@ -451,7 +451,7 @@ void print_test_starting(const char* test_name) {
     
     // Create account with some activity
     account_t *acc = account_create("summarytest", "password", "summary@test.com", "1990-01-01");
-    ck_assert_ptr_nonnull(acc);
+    ck_assert_ptr_ne(acc, NULL);
     
     // Set some values
     account_record_login_success(acc, 0x01020304);
@@ -459,7 +459,7 @@ void print_test_starting(const char* test_name) {
     // Create temp file for testing
     char filename[] = "/tmp/account_test_summary";
     FILE *file = fopen(filename, "w+");
-    ck_assert_ptr_nonnull(file);
+    ck_assert_ptr_ne(file, NULL);
     int fd = fileno(file);
     
     // Print summary
@@ -474,7 +474,7 @@ void print_test_starting(const char* test_name) {
     ck_assert_int_gt((int)read_bytes, 0);
     
     // Check for expected content
-    ck_assert_ptr_nonnull(strstr(buffer, "User ID: summarytest"));
+    ck_assert_ptr_ne(strstr(buffer, "User ID: summarytest"), NULL);
     
     fclose(file);
     remove(filename);  // Use remove instead of unlink
@@ -490,7 +490,7 @@ void print_test_starting(const char* test_name) {
     
     // Create test account for login test
     account_t *test_account = account_create(userid, password, "login@test.com", "1990-01-01");
-    ck_assert_ptr_nonnull(test_account);
+    ck_assert_ptr_ne(test_account, NULL);
     
     // Use account_validate_password to simulate the login process
     bool password_valid = account_validate_password(test_account, password);
@@ -515,7 +515,7 @@ void print_test_starting(const char* test_name) {
     print_test_starting("test_login_failure_handling");
     
     account_t *test_account = account_create("failuser", "correct_password", "fail@test.com", "1990-01-01");
-    ck_assert_ptr_nonnull(test_account);
+    ck_assert_ptr_ne(test_account, NULL);
     
     // Attempt with wrong password
     bool password_valid = account_validate_password(test_account, "wrong_password");
