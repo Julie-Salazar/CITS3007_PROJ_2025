@@ -227,8 +227,8 @@ if (account == NULL) {
   account->email[EMAIL_LENGTH - 1] = '\0';
    
   // Copy birthdate (ensuring null termination)
-  strncpy(account->birthdate, birthdate, BIRTHDATE_LENGTH - 1);
-  account->birthdate[BIRTHDATE_LENGTH - 1] = '\0';
+  memcpy(account->birthdate, birthdate, BIRTHDATE_LENGTH);
+
   
   // Get current time for ID generation and check for errors
   time_t current_time = time(NULL);

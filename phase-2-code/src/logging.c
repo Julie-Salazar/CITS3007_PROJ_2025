@@ -1,5 +1,4 @@
 #include "logging.h"
-#include "banned.h"
 
 // Dummy implementation that does nothing
 /*
