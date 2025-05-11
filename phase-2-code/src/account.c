@@ -216,17 +216,8 @@ if (account == NULL) {
 
   strncpy(account->password_hash, hashed_pw, HASH_LENGTH - 1);
   account->password_hash[HASH_LENGTH - 1] = '\0';
-
-  unsigned int rand_val = (unsigned int)rand();
-  time_t current_time = time(NULL); 
-
-  if (current_time == (time_t)(-1)) {
-    log_message(LOG_ERROR, "account_create: Failed to get current time");
-    secure_zero_memory(account, sizeof(account_t));
-    free(account);
-    return NULL;
-  }
-    // Initialize default account settings
+  
+  // Initialize default account settings
   account->unban_time = 0;        // Not banned
   account->expiration_time = 0;    // No expiration
   account->login_count = 0;        // No successful logins
@@ -237,34 +228,36 @@ if (account == NULL) {
   // Copy email (ensuring null termination)
   strncpy(account->email, email, EMAIL_LENGTH - 1);
   account->email[EMAIL_LENGTH - 1] = '\0';
- 
+   
   // Copy birthdate (ensuring null termination)
   strncpy(account->birthdate, birthdate, BIRTHDATE_LENGTH - 1);
   account->birthdate[BIRTHDATE_LENGTH - 1] = '\0';
   
+  // Get current time for ID generation and check for errors
+  time_t current_time = time(NULL);
+  if (current_time == (time_t)-1) {
+    log_message(LOG_ERROR, "account_create: Failed to get current time");
+    secure_zero_memory(account, sizeof(account_t));
+    free(account);
+    return NULL;
+  }
   
-
-
-/**
- * @brief Sets the account ID and initializes default account settings
- * 
- * Generates a unique account ID by combining the current time with random values
- * using XOR to reduce collision probability. Then initializes all account status 
- * fields to their default values, logs the successful account creation, and returns
- * the account structure.
- * 
- * @return The fully initialized account structure
- */
-
-// Use XOR to combine the values, reducing chance of collisions
-account->account_id = (int64_t)current_time ^ ((int64_t)rand_val << 32 | (int64_t)rand_val);
-
-
+  // Generate a secure random value for ID creation, more secure than using time alone
+  // Using getrandom() for secure random number generation
+  uint64_t random_value;
+  if (getrandom(&random_value, sizeof(random_value), 0) != sizeof(random_value)) {
+    log_message(LOG_ERROR, "account_create: Failed to generate random value");
+    secure_zero_memory(account, sizeof(account_t));
+    free(account);
+    return NULL;
+  }
   
-log_message(LOG_INFO, "account_create: Successfully created account for user %s", account->userid);
-return account;
-
-}
+  // Create account ID by combining time and random value
+  account->account_id = (int64_t)current_time ^ (int64_t)random_value;
+  
+  log_message(LOG_INFO, "account_create: Successfully created account for user %s", account->userid);
+  return account;
+  }
 
 /**
  * @brief Securely clears a memory region by writing zeros
