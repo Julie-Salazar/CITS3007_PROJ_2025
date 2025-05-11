@@ -61,7 +61,7 @@ void print_test_starting(const char* test_name) {
     ck_assert_int_eq(res->last_login_time, 0);
     
     // Account ID should be non-zero
-    ck_assert_int_ne(res->account_id, 0);
+    // ck_assert_int_ne(res->account_id, 0);
     
     // Clean up
     account_free(res);
@@ -541,5 +541,28 @@ void print_test_starting(const char* test_name) {
     
     account_free(test_account);
     printf("Test passed: Login failure handling works correctly\n");
+
+#test test_account_id_ok
+    print_test_starting("test_account_id_ok");
+    
+    // Perform multiple account_create calls
+    account_t *test_account0 = account_create("user0", "password", "123@test.com", "1990-01-01");
+    ck_assert_ptr_ne(test_account0, NULL);
+
+    account_t *test_account1 = account_create("user1", "password", "123@test.com", "1990-01-01");
+    ck_assert_ptr_ne(test_account1, NULL);
+
+    account_t *test_account2 = account_create("user2", "password", "123@test.com", "1990-01-01");
+    ck_assert_ptr_ne(test_account2, NULL);
+
+    // Verify unique, incremenenting IDs
+    ck_assert_int_eq(test_account0->account_id, 0);
+    ck_assert_int_eq(test_account1->account_id, 1);
+    ck_assert_int_eq(test_account2->account_id, 2);
+
+    account_free(test_account0);
+    account_free(test_account1);
+    account_free(test_account2);
+    printf("Test passed: Account ID incrementation works correctly\n");
 
 // vim: syntax=c :

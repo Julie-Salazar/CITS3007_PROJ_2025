@@ -174,11 +174,14 @@ account_t *account_create(const char *userid, const char *plaintext_password,
     return NULL;
   }
 
-account_t *account = (account_t *)calloc(1, sizeof(account_t));
-if (account == NULL) {
-  log_message(LOG_ERROR, "account_create: Failed to allocate memory for account");
-  return NULL;
-}
+  // Will be incremented and preserved for each function call
+  static int64_t next_id = 0;
+
+  account_t *account = (account_t *)calloc(1, sizeof(account_t));
+  if (account == NULL) {
+    log_message(LOG_ERROR, "account_create: Failed to allocate memory for account");
+    return NULL;
+  }
   strncpy(account->userid, userid, USER_ID_LENGTH - 1);
   account->userid[USER_ID_LENGTH - 1] = '\0';
 
@@ -249,7 +252,9 @@ if (account == NULL) {
   }
   
   // Create account ID by combining time and random value
-  account->account_id = (int64_t)current_time ^ (int64_t)random_value;
+  account->account_id = next_id;
+
+  next_id++;
   
   log_message(LOG_INFO, "account_create: Successfully created account for user %s", account->userid);
   return account;
