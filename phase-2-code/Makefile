@@ -126,7 +126,7 @@ test: $(TARGET)
 
 .PHONY: all clean
 
-.DELETE_ON_ERROR:
+#.DELETE_ON_ERROR:
 
 # Include automatically generated dependency files (.d)
 -include $(OBJ_FILES:.o=.d)
