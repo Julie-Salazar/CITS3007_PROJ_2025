@@ -15,7 +15,6 @@
 #include <fcntl.h>
 #include <argon2.h>
 #include <sys/random.h>
-#include "banned.h"
 
 
 //default Argon2id parameters

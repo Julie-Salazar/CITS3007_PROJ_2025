@@ -12,8 +12,15 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
+#include "banned.h"
 
-
+/**
+ * @file login.c
+ * @brief Implements user login flow, session handling, and basic IP-based security mechanisms.
+ *
+ * Handles account lookup, password validation, IP rate limiting, and ban logic.
+ * Also responsible for generating session IDs using secure random data.
+ */
 #define SESSION_DURATION (3600 * 24)  // 24-hour session duration
 #define MAX_FAILED_ATTEMPTS 5         // Maximum number of failed attempts
 #define BAN_DURATION (3600 * 24)      // Ban duration (24 hours)
@@ -24,7 +31,12 @@
 #define MAX_PASSWORD_LENGTH 128       // Maximum password length
 #define MAX_USERID_LENGTH 64          // Maximum user ID length
 
-// IP tracking structure
+/**
+ * @struct ip_tracking_t
+ * @brief Tracks state for login attempts from a specific IPv4 address.
+ *
+ * Used to implement rate limiting and temporary bans based on repeated failures.
+ */
 typedef struct {
     ip4_addr_t ip;
     unsigned int fail_count;          // Number of failures
@@ -36,7 +48,16 @@ typedef struct {
 // Static array for IP tracking
 static ip_tracking_t ip_tracking[IP_TRACKING_SIZE] = {0};
 
-// Generate random session ID using cryptographically secure random number generator
+/**
+ * @brief Generates a cryptographically secure session ID.
+ *
+ * Fills a given buffer with a 64-character hexadecimal string derived from 32 bytes
+ * of secure random data using OpenSSL RAND_bytes().
+ *
+ * @param session_id Output buffer (must be at least 65 bytes to include null terminator).
+ * @param length Size of the session_id buffer.
+ * @return true if generation succeeded, false on failure.
+ */
 static bool generate_session_id(char *session_id, size_t length) {
     if (!session_id || length < 33) {  // Ensure minimum length for security
         return false;
@@ -57,6 +78,15 @@ static bool generate_session_id(char *session_id, size_t length) {
 }
 
 // Validate user ID format
+/**
+ * @brief Checks whether a given user ID string is valid.
+ *
+ * Only alphanumeric characters and underscores are allowed. Rejects IDs
+ * that are empty or exceed MAX_USERID_LENGTH.
+ *
+ * @param userid Null-terminated user ID string.
+ * @return true if valid, false otherwise.
+ */
 static bool is_valid_userid(const char *userid) {
     if (!userid) return false;
     
@@ -73,6 +103,15 @@ static bool is_valid_userid(const char *userid) {
 }
 
 // Validate password format
+/**
+ * @brief Verifies password length constraints.
+ *
+ * Accepts passwords between 6 and MAX_PASSWORD_LENGTH characters.
+ * No character content validation is performed here.
+ *
+ * @param password Null-terminated password string.
+ * @return true if password length is within bounds, false otherwise.
+ */
 static bool is_valid_password(const char *password) {
     if (!password) return false;
 
@@ -81,6 +120,16 @@ static bool is_valid_password(const char *password) {
 }
 
 // Check if rate limited with improved tracking
+/**
+ * @brief Determines if the specified IP has exceeded the allowed login rate.
+ *
+ * Checks whether the number of attempts in the current time window exceeds
+ * MAX_ATTEMPTS_PER_WINDOW. If the IP is new or its window has expired,
+ * the counters are reset.
+ *
+ * @param ip The IPv4 address to check.
+ * @return true if rate limit has been exceeded, false otherwise.
+ */
 static bool is_rate_limited(ip4_addr_t ip) {
     if (ip == 0) return true;  // Invalid IP
     
@@ -121,6 +170,15 @@ static bool is_rate_limited(ip4_addr_t ip) {
 }
 
 // Check if IP is banned with improved tracking
+/**
+ * @brief Checks whether the given IP address is currently banned.
+ *
+ * If the IP has failed more than MAX_FAILED_ATTEMPTS within BAN_DURATION,
+ * it is considered temporarily banned.
+ *
+ * @param ip IPv4 address to check.
+ * @return true if the IP is banned, false otherwise.
+ */
 static bool is_ip_banned(ip4_addr_t ip) {
     if (ip == 0) return true;  // Invalid IP
     
@@ -149,6 +207,14 @@ static bool is_ip_banned(ip4_addr_t ip) {
 }
 
 // Record IP failure with improved tracking
+/**
+ * @brief Logs a failed login attempt for a given IP.
+ *
+ * Increments the IP’s failure counter and updates the timestamp.
+ * Used for ban enforcement.
+ *
+ * @param ip The IPv4 address associated with the failed login.
+ */
 static void record_ip_failure(ip4_addr_t ip) {
     if (ip == 0) return;  // Invalid IP
     
@@ -171,6 +237,12 @@ static void record_ip_failure(ip4_addr_t ip) {
 }
 
 // Add variable security delay to prevent timing attacks
+/**
+ * @brief Introduces a small randomized delay to hinder brute-force attacks.
+ *
+ * Adds 100–200ms of delay using nanosleep() with a random value from RAND_bytes().
+ * This helps mitigate timing-based attacks and user enumeration.
+ */
 static void add_security_delay(void) {
     unsigned char random_delay;
     if (RAND_bytes(&random_delay, 1) != 1) {
@@ -184,6 +256,20 @@ static void add_security_delay(void) {
     nanosleep(&delay, NULL);
 }
 
+/**
+ * @brief Attempts to authenticate a user and establish a login session.
+ *
+ * This function verifies credentials, enforces IP-based rate limiting and bans,
+ * checks account state (banned/expired), and if successful, generates a session.
+ *
+ * @param userid The username attempting to log in.
+ * @param password The plaintext password to validate.
+ * @param client_ip The client’s IPv4 address.
+ * @param login_time The time at which the login was initiated.
+ * @param client_output_fd Optional file descriptor for client response (not used here).
+ * @param[out] session Output session data structure if login is successful.
+ * @return login_result_t indicating success or the reason for failure.
+ */
 login_result_t handle_login(const char *userid, const char *password,
                           ip4_addr_t client_ip, time_t login_time,
                           int client_output_fd,
