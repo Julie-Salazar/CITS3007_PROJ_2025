@@ -1,12 +1,8 @@
 {
-  "name": "Ubuntu 22.04 Codespace",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "bash"
-  },
-  "extensions": [],
+  "name": "Ubuntu 22.04 Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
   "features": {},
-  "postCreateCommand": "sudo apt update && sudo apt install -y build-essential"
+  "settings": {},
+  "postCreateCommand": "uname -m && lsb_release -a",
+  "remoteUser": "vscode"
 }
