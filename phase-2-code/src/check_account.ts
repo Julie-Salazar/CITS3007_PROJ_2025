@@ -140,6 +140,35 @@ void print_test_starting(const char* test_name) {
     
     printf("Test passed: account_validate_password correctly verifies passwords\n");
 
+#test test_random_salt_generation
+    print_test_starting("test_random_salt_generation");
+
+    account_t *acc = account_create("testuser", "repeated_password", "test@example.com", "1990-01-01");
+    ck_assert_ptr_ne(acc, NULL);
+
+    // Hash password using Argon2id
+    bool result = account_update_password(acc, "repeated_password");
+    ck_assert_int_eq(result, 1);
+
+    // Store original password hash and ensure NULL termination
+    char old_password_hash[HASH_LENGTH];
+    strncpy(old_password_hash, acc->password_hash, HASH_LENGTH - 1);
+    old_password_hash[HASH_LENGTH - 1] = '\0';
+
+    result = account_update_password(acc, "repeated_password");
+    ck_assert_int_eq(result, 1);
+
+    // Store new password hash for same password and ensure NULL termination
+    char new_password_hash[HASH_LENGTH];
+    strncpy(new_password_hash, acc->password_hash, HASH_LENGTH - 1);
+    new_password_hash[HASH_LENGTH - 1] = '\0';
+
+    int comp_result = strncmp(old_password_hash, new_password_hash, HASH_LENGTH - 1);
+
+    ck_assert_int_ne(comp_result, 0);
+
+    printf("Test passed: account_update_password correctly salts passwords\n");
+
 #tcase account_login_tracking_test_case
 
 #test test_account_login_tracking
