@@ -30,6 +30,8 @@ SRC_FILES := $(shell find $(SRC_DIR) -name "*.c") $(TS_FILES:.ts=.c)
 OBJ_FILES := $(SRC_FILES:.c=.o)
 # we need to uniq-ify object files to stop .ts and .c versions of tests showing up twice
 OBJ_FILES := $(shell echo $(subst $(SRC_DIR),$(BUILD_DIR),$(OBJ_FILES)) | tr ' ' '\n' | sort | uniq)
+# we need to uniq-ify object files to stop .ts and .c versions of tests showing up twice
+OBJ_FILES := $(shell echo $(subst $(SRC_DIR),$(BUILD_DIR),$(OBJ_FILES)) | tr ' ' '\n' | sort | uniq)
 
 
 SRC_DIRS := $(shell find $(SRC_DIR) -type d)
@@ -46,17 +48,36 @@ PKG_CFLAGS := $(if $(strip $(PKG_DEPS)),$(shell pkg-config --cflags $(PKG_DEPS))
 # use pkg-config to get the linker flags for the dependencies
 PKG_LDFLAGS := $(if $(strip $(PKG_DEPS)),$(shell pkg-config --libs $(PKG_DEPS)))
 
+# expected values:
+# - "subunit": will amend check_* program to use subunit output
+# - anything else: won't amend it.
+TEST_TYPE = normal
+
+# technically, implicit function declaration is already made an error by
+# -pedantic-errors.
+EXTRA_CFLAGS = -pedantic-errors -Werror=implicit-function-declaration -Werror=vla  -Wconversion \
+	-fno-common -Wstrict-aliasing -Werror=strict-aliasing -Wformat=2 -Werror=format \
+	-Wreturn-type -Werror=return-type
+
+# Add your sanitizers here
+SANITIZERS = -fsanitize=undefined,address,signed-integer-overflow -fno-stack-protector
+
+
 # You may wish to add additional compiler flags or linker flags here
 # (e.g. to change the optimization level, enable sanitizers, etc.)
 # This is helpful when testing your code locally, even though we will
 # not necessarily use the same flags when testing your code.
 DEBUG = -g -fno-omit-frame-pointer
 CFLAGS = $(DEBUG) -std=c11 -pedantic-errors -Wall -Wextra $(INC_FLAGS) $(PKG_CFLAGS)
-LDFLAGS = $(PKG_LDFLAGS) -lcrypto
+
+LDFLAGS = $(PKG_LDFLAGS) -lcrypto -largon2
 
 # how to make a .c file from a .ts file
 %.c: %.ts
 	checkmk $< > $@
+ifeq ($(TEST_TYPE),subunit)
+	sed -i 's/CK_ENV/CK_SUBUNIT/g' $@
+endif
 
 ###
 # Targets
@@ -86,9 +107,26 @@ install-dependencies:
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET) src/check*.c src/*.BAK src/*.NEW
 
+####
+# test running
+
+TEST_RUN_OPTIONS = \
+        export UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1:abort_on_error=1:disable_core=0:disable_coredump=0"; \
+        export ASAN_OPTIONS="detect_leaks=0:disable_core=0:unmap_shadow_on_exit=1:abort_on_error=1:disable_coredump=0"; export CK_VERBOSITY=verbose
+
+TEST_SUITES = account_suite
+
+# for debugging:
+#test: SHELL=bash -x
+
+test: $(TARGET)
+	for suite in $(TEST_SUITES); do \
+		$(TEST_RUN_OPTIONS); export CK_RUN_SUITE="$$suite"; ./$< ; \
+	done
+
 .PHONY: all clean
 
-.DELETE_ON_ERROR:
+#.DELETE_ON_ERROR:
 
 # Include automatically generated dependency files (.d)
 -include $(OBJ_FILES:.o=.d)
