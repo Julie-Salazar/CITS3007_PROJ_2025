@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <argon2.h>
 #include <sys/random.h>
+#include "banned.h"
 
 
 //default Argon2id parameters
@@ -520,7 +521,7 @@ void account_set_expiration_time(account_t *acc, time_t t) {
     bool has_at = false;
     bool has_dot = false;
     bool has_domain = false;
-    int at_pos = -1;
+    size_t at_pos = 0;
 
     for (size_t i = 0; i < email_len; i++) {
         // Check for illegal characters
@@ -538,12 +539,13 @@ void account_set_expiration_time(account_t *acc, time_t t) {
             at_pos = i;
         }
         else if (new_email[i] == '.') {
-            if (i == 0 || i == email_len - 1 || i == (size_t)at_pos + 1) {
+            if (i == 0 || i == email_len - 1 || i == at_pos + 1) {
                 log_message(LOG_ERROR, "account_set_email: Invalid . symbol position");
                 return;
             }
             has_dot = true;
-            if (at_pos != -1 && i > (size_t)at_pos) {
+            // at_pos being 0 is an invalid position
+            if (at_pos != 0 && i > at_pos) {
                 has_domain = true;
             }
         }
