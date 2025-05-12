@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
+#include "banned.h"
 
 /**
  * @file login.c
@@ -69,8 +70,8 @@ static bool generate_session_id(char *session_id, size_t length) {
     }
     
     for (size_t i = 0; i < sizeof(random_bytes); i++) {
-    snprintf(session_id + (i * 2), 3, "%02x", random_bytes[i]);
-}
+        snprintf(session_id + (i * 2), 3, "%02x", random_bytes[i]);
+    }
     session_id[64] = '\0';
 
     return true;

@@ -18,6 +18,7 @@
 
 #include "account.h"
 #include "logging.h"
+#include "login.h"
 
 #define ARR_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
@@ -595,5 +596,33 @@ void print_test_starting(const char* test_name) {
     remove(filename);  // Use remove instead of unlink
     account_free(acc);
     printf("Test passed: account_print_summary produces expected output\n");
+
+#tcase data_flow_test_case
+
+#test test_basic_sequence
+
+    print_test_starting("test_basic_sequence");
+
+    // Create account correctly
+    account_t *test_acc = account_create("test_user", "password", "good_email@test.com", "2024-05-12");
+    ck_assert_ptr_ne(test_acc, NULL);
+
+    // Attempt to login with new account
+    //ip4_addr_t ip = 0x01020304; // 1.2.3.4
+    //login_session_data_t *session = (login_session_data_t *)malloc(sizeof(login_session_data_t));
+    //login_result_t login_res = handle_login(test_acc->userid, "password", ip, time(0), 0, session);
+    //ck_assert_int_eq(login_res, LOGIN_SUCCESS);
+
+    // Update password after login
+    bool update_res = account_update_password(test_acc, "new_password");
+    ck_assert(update_res);
+
+    // Attempt to update email to invalid email
+    account_set_email(test_acc, "bad_email@nodot");
+    ck_assert_str_eq(test_acc->email, "good_email@test.com");
+
+    account_free(test_acc);
+    //free(session);
+    printf("Test passed: basic function sequence operates as expected.\n");
 
 // vim: syntax=c :
