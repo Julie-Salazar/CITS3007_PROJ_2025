@@ -68,7 +68,7 @@ SANITIZERS = -fsanitize=undefined,address,signed-integer-overflow -fno-stack-pro
 # This is helpful when testing your code locally, even though we will
 # not necessarily use the same flags when testing your code.
 DEBUG = -g -fno-omit-frame-pointer
-CFLAGS = $(DEBUG) -std=c11 -pedantic-errors -Wall -Wextra $(INC_FLAGS) $(PKG_CFLAGS)
+CFLAGS = $(DEBUG) $(EXTRA_CFLAGS) $(SANITIZERS) -std=c11 -pedantic-errors -Wall -Wextra $(INC_FLAGS) $(PKG_CFLAGS)
 
 LDFLAGS = $(PKG_LDFLAGS) -lcrypto -largon2
 

@@ -20,7 +20,7 @@
 #define SESSION_INVALID_ACCOUNT_ID (-1)
 
 typedef struct {
-  int account_id;         // ID of the authenticated account
+  int64_t account_id;         // ID of the authenticated account
   time_t session_start;   // login start time
   time_t expiration_time; // session expiry time
 } login_session_data_t;
