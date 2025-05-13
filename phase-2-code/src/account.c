@@ -304,6 +304,12 @@ static void secure_zero_memory(void *ptr, size_t len) {
  * @pre             The new_plaintext_password param is a valid, NULL-terminated string.
  */
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
+  
+  if(!acc || !new_plaintext_password) {
+    log_message(LOG_ERROR, "NULL pointer passed to 'account_update_password'.")
+    return false;
+  }
+  
   if(argon2id_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) == ARGON2_OK) {
     log_message(LOG_INFO, "Password verified for account %d.", acc->account_id);
     return true;
@@ -345,6 +351,11 @@ int generate_salt(uint8_t *salt, size_t length) {
  * @pre             The new_plaintext_password param is a valid, NULL-terminated string.
  */
 bool account_update_password(account_t *acc, const char *new_plaintext_password) {  
+
+  if(!acc || !new_plaintext_password) {
+    log_message(LOG_ERROR, "NULL pointer passed to 'account_update_password'.")
+    return false;
+  }
 
   char hashed_pw[HASH_LENGTH];
   uint8_t salt[SALT_LENGTH];
