@@ -409,13 +409,12 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
  * @brief Records a failed login attempt for an account
  *
  * This function updates an account's login statistics when a login attempt fails.
- * It increments the failed login counter.
+ * It increments the failed login counter and resets the login counter.
  *
  * @param acc Pointer to the account structure to update
  *
  * @note The function safely handles NULL account pointers by performing no operations
- * @warning This function should NOT reset the successful login count or update
- *          last login time since the login actually failed
+ * @warning This function should NOT update last login time since the login actually failed
  */
 
  void account_record_login_failure(account_t *acc) {
@@ -426,9 +425,9 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
   
   // Increment the failed login counter
   acc->login_fail_count++;
+  acc->login_count = 0;
   
-  // Note: We do NOT update last_login_time or increment login_count
-  // since this was a failed login attempt
+  // Note: We do NOT update last_login_time since this was a failed login attempt
 }
 
 
