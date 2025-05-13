@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <argon2.h>
 #include <sys/random.h>
+#include "banned.h"
 
 
 //default Argon2id parameters
@@ -392,7 +393,11 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
  */
 
  void account_record_login_success(account_t *acc, ip4_addr_t ip) {
-  if (acc != NULL) { 
+  if (acc == NULL) {  
+      log_message(LOG_WARN, "account_record_login_success: Called with NULL account pointer");
+      return;
+  }
+  else { 
     acc->login_fail_count = 0; // reset login fail count
     acc->login_count++;
     acc->last_login_time = time(NULL);
@@ -415,6 +420,7 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 
  void account_record_login_failure(account_t *acc) {
   if (acc == NULL) {
+    log_message(LOG_WARN, "account_record_login_failure: Called with NULL account pointer");
     return;
   }
   
