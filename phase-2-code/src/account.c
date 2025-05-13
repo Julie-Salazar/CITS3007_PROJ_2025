@@ -394,7 +394,7 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 
  void account_record_login_success(account_t *acc, ip4_addr_t ip) {
   if (acc == NULL) {  
-      log_message(LOG_WARN, "account_record_login_success: Called with NULL account pointer");
+      log_message(LOG_ERROR, "account_record_login_success: Called with NULL account pointer");
       return;
   }
   else { 
@@ -420,7 +420,7 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 
  void account_record_login_failure(account_t *acc) {
   if (acc == NULL) {
-    log_message(LOG_WARN, "account_record_login_failure: Called with NULL account pointer");
+    log_message(LOG_ERROR, "account_record_login_failure: Called with NULL account pointer");
     return;
   }
   
@@ -588,9 +588,11 @@ void account_set_expiration_time(account_t *acc, time_t t) {
  bool account_print_summary(const account_t *acct, int fd) {
   // Check if account is non-NULL
   if (acct == NULL) {  
+      log_message(LOG_ERROR, "account_print_summary: Called with NULL account pointer");
       return false;
   }
   if (fcntl(fd, F_GETFD) == -1) {
+      log_message(LOG_ERROR, "account_print_summary: fd is not valid and open for writing");
       return false;
   }
 
