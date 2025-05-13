@@ -174,44 +174,25 @@ account_t *account_create(const char *userid, const char *plaintext_password,
     return NULL;
   }
 
-account_t *account = (account_t *)calloc(1, sizeof(account_t));
-if (account == NULL) {
-  log_message(LOG_ERROR, "account_create: Failed to allocate memory for account");
-  return NULL;
-}
+  // Will be incremented and preserved for each function call
+  static int64_t next_id = 0;
+
+  account_t *account = (account_t *)calloc(1, sizeof(account_t));
+  if (account == NULL) {
+    log_message(LOG_ERROR, "account_create: Failed to allocate memory for account");
+    return NULL;
+  }
   strncpy(account->userid, userid, USER_ID_LENGTH - 1);
   account->userid[USER_ID_LENGTH - 1] = '\0';
 
-  // Hash the password securely using argon2id
-  char hashed_pw[HASH_LENGTH];
-  uint8_t salt[SALT_LENGTH];
+  int result = account_update_password(account, plaintext_password);
 
-  if (generate_salt(salt, SALT_LENGTH) != 0) {
-    log_message(LOG_ERROR, "account_create: Failed to generate salt");
+  if (!result) {
+    log_message(LOG_ERROR, "account_create: Argon2id hashing failed");
     secure_zero_memory(account, sizeof(account_t));
     free(account);
     return NULL;
   }
-
-  int result = argon2id_hash_encoded(
-  ARGON2_T_COST,
-  ARGON2_M_COST,
-  ARGON2_PARALLELISM,
-  plaintext_password, strlen(plaintext_password),
-  salt, SALT_LENGTH,
-  32,
-  hashed_pw, HASH_LENGTH
-  );
-
-  if (result != ARGON2_OK) {
-    log_message(LOG_ERROR, "account_create: Argon2id hashing failed");
-    secure_zero_memory(account, sizeof(account_t));
-    free(account);
-  return NULL;
-  }
-
-  strncpy(account->password_hash, hashed_pw, HASH_LENGTH - 1);
-  account->password_hash[HASH_LENGTH - 1] = '\0';
   
   // Initialize default account settings
   account->unban_time = 0;        // Not banned
@@ -249,7 +230,9 @@ if (account == NULL) {
   }
   
   // Create account ID by combining time and random value
-  account->account_id = (int64_t)current_time ^ (int64_t)random_value;
+  account->account_id = next_id;
+
+  next_id++;
   
   log_message(LOG_INFO, "account_create: Successfully created account for user %s", account->userid);
   return account;
@@ -311,12 +294,13 @@ static void secure_zero_memory(void *ptr, size_t len) {
 
 
 /**
- * \brief           Validates the provided password against the stored hashed password in the account.
- * \param[in]       acc: Pointer to the account containing the hashed password.
- * \param[in]       plaintext_password: The password to validate.
- * \return          True if the password matches the stored hash, false otherwise.
+ * @brief           Validates the provided password against the stored hashed password in the account.
+ * @param[in]       acc: Pointer to the account containing the hashed password.
+ * @param[in]       plaintext_password: The password to validate.
+ * @return          True if the password matches the stored hash, false otherwise.
  *
- * \pre             Both params are non-NULL and plaintext_password is a valid, NULL-terminated string.
+ * @pre             Both params are non-NULL. 
+ * @pre             The new_plaintext_password param is a valid, NULL-terminated string.
  */
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
   if(argon2id_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) == ARGON2_OK) {
@@ -330,12 +314,13 @@ bool account_validate_password(const account_t *acc, const char *plaintext_passw
 }
 
 /**
- * \brief           Generates a unique salt to be used in the password hashing process
- * \param[in]       salt: Pointer to byte buffer to store the generated salt
- * \param[in]       length: Length of the salt buffer in bytes
- * \return          0 on successful salt generation, -1 otherwise.
+ * @brief           Generates a unique salt to be used in the password hashing process
+ * @param[in]       salt: Pointer to byte buffer to store the generated salt
+ * @param[in]       length: Length of the salt buffer in bytes
+ * @return          0 on successful salt generation, -1 otherwise.
  * 
- * \pre             Salt is non-NULL and length > 0.
+ * @pre             Salt is non-NULL.
+ * @pre             The param length is greater than 0.
  */
 int generate_salt(uint8_t *salt, size_t length) {
   // Set flags to 0 as none are needed.
@@ -350,12 +335,13 @@ int generate_salt(uint8_t *salt, size_t length) {
 }
 
 /**
- * \brief           Updates the password of the given account.
- * \param[in]       acc: Pointer to the account whose password will be updated.
- * \param[in]       new_plaintext_password: The new password to be set.
- * \return          True if the password was successfully updated, false otherwise.
+ * @brief           Updates the password of the given account.
+ * @param[in]       acc: Pointer to the account whose password will be updated.
+ * @param[in]       new_plaintext_password: The new password to be set.
+ * @return          True if the password was successfully updated, false otherwise.
  * 
- * \note            Preconditions: both params are non-NULL and new_plaintext_password is a valid, NULL-terminated string.
+ * @pre             Both params are non-NULL. 
+ * @pre             The new_plaintext_password param is a valid, NULL-terminated string.
  */
 bool account_update_password(account_t *acc, const char *new_plaintext_password) {  
 
@@ -406,7 +392,11 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
  */
 
  void account_record_login_success(account_t *acc, ip4_addr_t ip) {
-  if (acc != NULL) { 
+  if (acc == NULL) {  
+      log_message(LOG_ERROR, "account_record_login_success: Called with NULL account pointer");
+      return;
+  }
+  else { 
     acc->login_fail_count = 0; // reset login fail count
     acc->login_count++;
     acc->last_login_time = time(NULL);
@@ -429,6 +419,7 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 
  void account_record_login_failure(account_t *acc) {
   if (acc == NULL) {
+    log_message(LOG_ERROR, "account_record_login_failure: Called with NULL account pointer");
     return;
   }
   
@@ -534,7 +525,7 @@ void account_set_expiration_time(account_t *acc, time_t t) {
     bool has_at = false;
     bool has_dot = false;
     bool has_domain = false;
-    int at_pos = -1;
+    size_t at_pos = 0;
 
     for (size_t i = 0; i < email_len; i++) {
         // Check for illegal characters
@@ -552,12 +543,13 @@ void account_set_expiration_time(account_t *acc, time_t t) {
             at_pos = i;
         }
         else if (new_email[i] == '.') {
-            if (i == 0 || i == email_len - 1 || i == (size_t)at_pos + 1) {
+            if (i == 0 || i == email_len - 1 || i == at_pos + 1) {
                 log_message(LOG_ERROR, "account_set_email: Invalid . symbol position");
                 return;
             }
             has_dot = true;
-            if (at_pos != -1 && i > (size_t)at_pos) {
+            // at_pos being 0 is an invalid position
+            if (at_pos != 0 && i > at_pos) {
                 has_domain = true;
             }
         }
@@ -595,9 +587,11 @@ void account_set_expiration_time(account_t *acc, time_t t) {
  bool account_print_summary(const account_t *acct, int fd) {
   // Check if account is non-NULL
   if (acct == NULL) {  
+      log_message(LOG_ERROR, "account_print_summary: Called with NULL account pointer");
       return false;
   }
   if (fcntl(fd, F_GETFD) == -1) {
+      log_message(LOG_ERROR, "account_print_summary: fd is not valid and open for writing");
       return false;
   }
 
