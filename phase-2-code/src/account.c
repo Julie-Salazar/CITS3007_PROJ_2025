@@ -305,8 +305,8 @@ static void secure_zero_memory(void *ptr, size_t len) {
  */
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
   
-  if(!acc || !new_plaintext_password) {
-    log_message(LOG_ERROR, "NULL pointer passed to 'account_update_password'.")
+  if(!acc || !plaintext_password) {
+    log_message(LOG_ERROR, "NULL pointer passed to 'account_update_password'.");
     return false;
   }
   
@@ -315,7 +315,7 @@ bool account_validate_password(const account_t *acc, const char *plaintext_passw
     return true;
   }
   else {
-    log_message(LOG_INFO, "Password verification failed for account %d.", acc->account_id);
+    log_message(LOG_WARN, "Password verification failed for account %d.", acc->account_id);
     return false;
   }
 }
@@ -335,7 +335,7 @@ int generate_salt(uint8_t *salt, size_t length) {
 
   // Check for failure of getrandom()
   if(result < 0 || (size_t)result != length) {
-    log_message(LOG_WARN, "getrandom() failed. Return value: %d", result);
+    log_message(LOG_ERROR, "getrandom() failed. Return value: %d", result);
     return -1;
   }
   return 0;
@@ -353,7 +353,7 @@ int generate_salt(uint8_t *salt, size_t length) {
 bool account_update_password(account_t *acc, const char *new_plaintext_password) {  
 
   if(!acc || !new_plaintext_password) {
-    log_message(LOG_ERROR, "NULL pointer passed to 'account_update_password'.")
+    log_message(LOG_ERROR, "NULL pointer passed to 'account_update_password'.");
     return false;
   }
 
@@ -386,6 +386,7 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
   // Copy password hash to account struct, ensuring NULL termination.
   strncpy(acc->password_hash, hashed_pw, HASH_LENGTH - 1);
   acc->password_hash[HASH_LENGTH - 1] = '\0';
+  log_message(LOG_INFO, "Password updated successfully for account %d.", acc->account_id);
 
   return true;
 }
