@@ -1,6 +1,17 @@
 # you can add the name of Ubuntu packages which need
 # to be installed below, one package per line
 
+# Essential build tools
+build-essential
+pkg-config
+make
+gcc
+
+# Required libraries
 libargon2-dev
-doxygen
-graphviz
+libssl-dev
+check
+
+# Helpful utilities
+rsync
+git
