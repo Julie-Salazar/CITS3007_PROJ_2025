@@ -6,3 +6,4 @@
 libargon2
 libssl
 check
+libcrypto
