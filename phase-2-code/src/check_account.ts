@@ -2,15 +2,16 @@
 #define _POSIX_C_SOURCE 199506L
 #define CITS3007_PERMISSIVE
 
+#include <stdio.h>
 #include <check.h>
 #include <limits.h>
-#include <stdio.h>
+#include <unistd.h> 
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <time.h>
-#include <unistd.h>
+
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
